@@ -26,6 +26,16 @@ export interface Partner {
   additionalFocusAreas: string[];
 }
 
+export interface SheetEvent {
+  title: string;
+  type: string;
+  organizer: string;
+  deadline: string;
+  description: string;
+  link: string;
+  status: string;
+}
+
 const SHEET_ID = '1ZKUJX53bNGfduy9wyBpykxpjd-_xaIy1Mabo4RRxr0g';
 
 type GVizCell = { v: unknown } | null;
@@ -36,17 +46,23 @@ function cell(row: GVizRow, i: number): string {
   return String((row.c[i] as { v: unknown }).v).trim();
 }
 
-export async function fetchPartners(): Promise<Partner[]> {
-  const res = await fetch(
-    `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:json`,
-    { cache: 'no-store' }
+async function fetchSheet(sheetName?: string): Promise<GVizRow[]> {
+  const url = new URL(
+    `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq`
   );
+  url.searchParams.set('tqx', 'out:json');
+  if (sheetName) url.searchParams.set('sheet', sheetName);
+
+  const res = await fetch(url.toString(), { cache: 'no-store' });
   const text = await res.text();
-  // Strip JSONP wrapper: /*O_o*/\ngoogle.visualization.Query.setResponse({...});
   const jsonStr = text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1);
   const data = JSON.parse(jsonStr);
+  return data.table.rows as GVizRow[];
+}
 
-  return (data.table.rows as GVizRow[])
+export async function fetchPartners(): Promise<Partner[]> {
+  const rows = await fetchSheet();
+  return rows
     .filter((row) => row.c?.[1] && (row.c[1] as { v: unknown }).v)
     .map((row) => ({
       name: cell(row, 1),
@@ -73,7 +89,27 @@ export async function fetchPartners(): Promise<Partner[]> {
       majorAchievements: cell(row, 32),
       email: cell(row, 38),
       collaborationOpportunities: cell(row, 39),
-      // AO–AW (indices 40–48) are additional focus area columns
       additionalFocusAreas: Array.from({ length: 9 }, (_, i) => cell(row, 40 + i)).filter(Boolean),
     }));
+}
+
+export async function fetchEvents(): Promise<SheetEvent[]> {
+  const rows = await fetchSheet('Events');
+  return rows
+    .map((row) => ({
+      title: cell(row, 0),
+      type: cell(row, 1),
+      organizer: cell(row, 2),
+      deadline: cell(row, 3),
+      description: cell(row, 4),
+      link: cell(row, 5),
+      status: cell(row, 6),
+    }))
+    .filter(
+      (e) =>
+        e.title &&
+        !e.title.startsWith('http') &&
+        e.title.toLowerCase() !== 'events' &&
+        e.status.toLowerCase() !== 'closed'
+    );
 }

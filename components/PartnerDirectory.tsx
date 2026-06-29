@@ -2,16 +2,39 @@
 
 import { useState, useMemo } from 'react';
 import Image from 'next/image';
-import { Partner } from '@/lib/sheets';
+import { Partner, SheetEvent } from '@/lib/sheets';
 import PartnerCard from './PartnerCard';
+import PartnerListRow from './PartnerListRow';
+import EventsSidebar from './EventsSidebar';
+
+type ViewMode = 'grid' | 'list';
 
 const SHEET_URL =
   'https://docs.google.com/spreadsheets/d/1ZKUJX53bNGfduy9wyBpykxpjd-_xaIy1Mabo4RRxr0g/edit?usp=sharing';
 
-export default function PartnerDirectory({ partners }: { partners: Partner[] }) {
+interface Props {
+  partners: Partner[];
+  events: SheetEvent[];
+  eventsEnabled: boolean;
+}
+
+export default function PartnerDirectory({ partners, events, eventsEnabled }: Props) {
   const [search, setSearch] = useState('');
   const [selectedFocus, setSelectedFocus] = useState('');
   const [selectedFee, setSelectedFee] = useState('');
+  const [view, setView] = useState<ViewMode>('grid');
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const urgentCount = events.filter((e) => {
+    if (!e.deadline) return false;
+    const m = e.deadline.match(/Date\((\d+),(\d+),(\d+)\)/);
+    const d = m
+      ? new Date(parseInt(m[1]), parseInt(m[2]), parseInt(m[3]))
+      : new Date(e.deadline);
+    if (isNaN(d.getTime())) return false;
+    const days = Math.ceil((d.getTime() - Date.now()) / 86400000);
+    return days >= 0 && days <= 30;
+  }).length;
 
   const allFocuses = useMemo(() => {
     const s = new Set<string>();
@@ -64,16 +87,37 @@ export default function PartnerDirectory({ partners }: { partners: Partner[] }) 
             </p>
             <h1 className="text-xl font-bold leading-tight">Partner Directory</h1>
           </div>
-          <div className="ml-auto text-right hidden sm:block">
-            <p className="text-white/40 text-xs">{partners.length} partners</p>
-            <a
-              href={SHEET_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white/60 hover:text-white text-xs transition-colors"
-            >
-              View source sheet ↗
-            </a>
+          <div className="ml-auto flex items-center gap-4">
+            {eventsEnabled && (
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="relative flex items-center gap-2 bg-white hover:bg-gray-100 transition-colors
+                  text-black text-sm font-medium px-4 py-2 rounded-lg"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                Events
+                {urgentCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs
+                    w-4 h-4 rounded-full flex items-center justify-center font-bold leading-none">
+                    {urgentCount}
+                  </span>
+                )}
+              </button>
+            )}
+            <div className="text-right hidden sm:block">
+              <p className="text-white/40 text-xs">{partners.length} partners</p>
+              <a
+                href={SHEET_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white/60 hover:text-white text-xs transition-colors"
+              >
+                View source sheet ↗
+              </a>
+            </div>
           </div>
         </div>
       </header>
@@ -169,23 +213,67 @@ export default function PartnerDirectory({ partners }: { partners: Partner[] }) 
               ? `${filtered.length} of ${partners.length} partners`
               : `${partners.length} partners`}
           </p>
-          {/* Mobile sheet link */}
-          <a
-            href={SHEET_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-xs text-gray-400 hover:text-black sm:hidden transition-colors"
-          >
-            View source sheet ↗
-          </a>
+          <div className="flex items-center gap-3">
+            {/* Mobile sheet link */}
+            <a
+              href={SHEET_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-gray-400 hover:text-black sm:hidden transition-colors"
+            >
+              View source sheet ↗
+            </a>
+            {/* View toggle */}
+            <div className="flex rounded-lg border border-gray-200 overflow-hidden">
+              <button
+                onClick={() => setView('grid')}
+                title="Grid view"
+                className={`px-2.5 py-1.5 transition-colors ${
+                  view === 'grid'
+                    ? 'bg-black text-white'
+                    : 'bg-white text-gray-400 hover:text-gray-700'
+                }`}
+              >
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                  <rect x="1" y="1" width="6" height="6" rx="1"/>
+                  <rect x="9" y="1" width="6" height="6" rx="1"/>
+                  <rect x="1" y="9" width="6" height="6" rx="1"/>
+                  <rect x="9" y="9" width="6" height="6" rx="1"/>
+                </svg>
+              </button>
+              <button
+                onClick={() => setView('list')}
+                title="List view"
+                className={`px-2.5 py-1.5 border-l border-gray-200 transition-colors ${
+                  view === 'list'
+                    ? 'bg-black text-white'
+                    : 'bg-white text-gray-400 hover:text-gray-700'
+                }`}
+              >
+                <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 16 16" aria-hidden="true">
+                  <rect x="1" y="2" width="14" height="2" rx="1"/>
+                  <rect x="1" y="7" width="14" height="2" rx="1"/>
+                  <rect x="1" y="12" width="14" height="2" rx="1"/>
+                </svg>
+              </button>
+            </div>
+          </div>
         </div>
 
         {filtered.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filtered.map((p, i) => (
-              <PartnerCard key={i} partner={p} />
-            ))}
-          </div>
+          view === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {filtered.map((p, i) => (
+                <PartnerCard key={i} partner={p} />
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {filtered.map((p, i) => (
+                <PartnerListRow key={i} partner={p} />
+              ))}
+            </div>
+          )
         ) : (
           <div className="text-center py-20 text-gray-400">
             <p className="text-3xl mb-3">🔍</p>
@@ -209,6 +297,14 @@ export default function PartnerDirectory({ partners }: { partners: Partner[] }) 
           </a>
         </p>
       </footer>
+
+      {eventsEnabled && (
+        <EventsSidebar
+          events={events}
+          open={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+      )}
     </div>
   );
 }
