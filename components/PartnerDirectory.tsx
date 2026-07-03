@@ -8,6 +8,23 @@ import PartnerListRow from './PartnerListRow';
 import EventsSidebar from './EventsSidebar';
 
 type ViewMode = 'grid' | 'list';
+type SortMode = 'alpha' | 'alpha-desc' | 'recent' | 'year';
+
+const SORT_OPTIONS: { value: SortMode; label: string }[] = [
+  { value: 'alpha', label: 'A – Z' },
+  { value: 'alpha-desc', label: 'Z – A' },
+  { value: 'recent', label: 'Recently added' },
+  { value: 'year', label: 'Year established' },
+];
+
+function parseTimestamp(raw: string): number {
+  if (!raw) return 0;
+  const m = raw.match(/Date\((\d+),(\d+),(\d+)(?:,(\d+),(\d+),(\d+))?\)/);
+  const d = m
+    ? new Date(+m[1], +m[2], +m[3], +(m[4] ?? 0), +(m[5] ?? 0), +(m[6] ?? 0))
+    : new Date(raw);
+  return isNaN(d.getTime()) ? 0 : d.getTime();
+}
 
 const SHEET_URL =
   'https://docs.google.com/spreadsheets/d/1ZKUJX53bNGfduy9wyBpykxpjd-_xaIy1Mabo4RRxr0g/edit?usp=sharing';
@@ -23,6 +40,7 @@ export default function PartnerDirectory({ partners, events, eventsEnabled }: Pr
   const [selectedFocus, setSelectedFocus] = useState('');
   const [selectedFee, setSelectedFee] = useState('');
   const [view, setView] = useState<ViewMode>('grid');
+  const [sort, setSort] = useState<SortMode>('alpha');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const urgentCount = events.filter((e) => {
@@ -50,7 +68,7 @@ export default function PartnerDirectory({ partners, events, eventsEnabled }: Pr
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
-    return partners.filter((p) => {
+    const result = partners.filter((p) => {
       if (q) {
         const hay = [p.name, p.mission, p.serviceDescription, p.focusArea, p.serviceAreas, ...p.focuses]
           .join(' ')
@@ -64,7 +82,23 @@ export default function PartnerDirectory({ partners, events, eventsEnabled }: Pr
       if (selectedFee && p.feeStructure !== selectedFee) return false;
       return true;
     });
-  }, [partners, search, selectedFocus, selectedFee]);
+    return [...result].sort((a, b) => {
+      switch (sort) {
+        case 'alpha-desc':
+          return b.name.localeCompare(a.name);
+        case 'recent':
+          return parseTimestamp(b.timestamp) - parseTimestamp(a.timestamp);
+        case 'year': {
+          // Newest first; partners without a year go last
+          const ya = parseInt(a.yearEstablished) || 0;
+          const yb = parseInt(b.yearEstablished) || 0;
+          return yb - ya || a.name.localeCompare(b.name);
+        }
+        default:
+          return a.name.localeCompare(b.name);
+      }
+    });
+  }, [partners, search, selectedFocus, selectedFee, sort]);
 
   const hasFilters = search || selectedFocus || selectedFee;
 
@@ -223,6 +257,23 @@ export default function PartnerDirectory({ partners, events, eventsEnabled }: Pr
             >
               View source sheet ↗
             </a>
+            {/* Sort */}
+            <div className="flex items-center gap-1.5">
+              <label htmlFor="sort" className="text-xs text-gray-400 font-medium whitespace-nowrap">
+                Sort
+              </label>
+              <select
+                id="sort"
+                value={sort}
+                onChange={(e) => setSort(e.target.value as SortMode)}
+                className="text-xs border border-gray-200 rounded-lg px-2.5 py-1.5 bg-white text-gray-700
+                  hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-black transition-colors"
+              >
+                {SORT_OPTIONS.map((o) => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
             {/* View toggle */}
             <div className="flex rounded-lg border border-gray-200 overflow-hidden">
               <button
@@ -263,14 +314,14 @@ export default function PartnerDirectory({ partners, events, eventsEnabled }: Pr
         {filtered.length > 0 ? (
           view === 'grid' ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {filtered.map((p, i) => (
-                <PartnerCard key={i} partner={p} />
+              {filtered.map((p) => (
+                <PartnerCard key={p.slug} partner={p} />
               ))}
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              {filtered.map((p, i) => (
-                <PartnerListRow key={i} partner={p} />
+              {filtered.map((p) => (
+                <PartnerListRow key={p.slug} partner={p} />
               ))}
             </div>
           )

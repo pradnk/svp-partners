@@ -1,4 +1,8 @@
+import { slugify } from './utils';
+
 export interface Partner {
+  slug: string;
+  timestamp: string;
   name: string;
   yearEstablished: string;
   legalStatus: string;
@@ -18,12 +22,24 @@ export interface Partner {
   programDuration: string;
   feeStructure: string;
   costPerOrg: string;
+  qualityMetrics: string;
+  customization: string;
+  followUpSupport: string;
   staffStrength: string;
+  subjectMatterExperts: string;
+  keyQualifications: string;
+  certifications: string;
+  yearsInSector: string;
   orgsTrainedCount: string;
   majorAchievements: string;
+  partneringOrgs: string;
+  memberships: string;
+  donorSupport: string;
+  additionalInfo: string;
   email: string;
   collaborationOpportunities: string;
   additionalFocusAreas: string[];
+  testimonials: string[];
 }
 
 export interface SheetEvent {
@@ -65,6 +81,8 @@ export async function fetchPartners(): Promise<Partner[]> {
   return rows
     .filter((row) => row.c?.[1] && (row.c[1] as { v: unknown }).v)
     .map((row) => ({
+      slug: slugify(cell(row, 1)),
+      timestamp: cell(row, 0),
       name: cell(row, 1),
       yearEstablished: cell(row, 2),
       legalStatus: cell(row, 3),
@@ -84,12 +102,24 @@ export async function fetchPartners(): Promise<Partner[]> {
       programDuration: cell(row, 20),
       feeStructure: cell(row, 21),
       costPerOrg: cell(row, 22),
+      qualityMetrics: cell(row, 23),
+      customization: cell(row, 24),
+      followUpSupport: cell(row, 25),
       staffStrength: cell(row, 26),
+      subjectMatterExperts: cell(row, 27),
+      keyQualifications: cell(row, 28),
+      certifications: cell(row, 29),
+      yearsInSector: cell(row, 30),
       orgsTrainedCount: cell(row, 31),
       majorAchievements: cell(row, 32),
+      partneringOrgs: cell(row, 34),
+      memberships: cell(row, 35),
+      donorSupport: cell(row, 36),
+      additionalInfo: cell(row, 37),
       email: cell(row, 38),
       collaborationOpportunities: cell(row, 39),
-      additionalFocusAreas: Array.from({ length: 9 }, (_, i) => cell(row, 40 + i)).filter(Boolean),
+      additionalFocusAreas: Array.from({ length: 10 }, (_, i) => cell(row, 40 + i)).filter(Boolean),
+      testimonials: [cell(row, 50), cell(row, 51), cell(row, 52)].filter(Boolean),
     }));
 }
 
