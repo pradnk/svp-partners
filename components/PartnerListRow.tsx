@@ -17,7 +17,8 @@ export default function PartnerListRow({ partner }: { partner: Partner }) {
 
   return (
     <div className="bg-white border border-gray-200 rounded-lg hover:shadow-sm transition-shadow">
-      <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[2fr_1.6fr_auto] gap-x-4 gap-y-2 px-4 py-3 items-center">
+      {/* Fixed widths for the fee + action columns keep rows aligned regardless of content */}
+      <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[minmax(0,2fr)_minmax(0,1.7fr)_11rem_auto] gap-x-4 gap-y-2 px-4 py-3 items-center">
         {/* Left: name + mission */}
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -54,32 +55,43 @@ export default function PartnerListRow({ partner }: { partner: Partner }) {
           </p>
         </div>
 
-        {/* Right: fee + actions */}
-        <div className="flex items-center gap-3 shrink-0">
+        {/* Fee — own fixed-width cell so badges line up across rows */}
+        <div className="hidden sm:block min-w-0">
           {partner.feeStructure && (
-            <span className="hidden sm:inline text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full whitespace-nowrap">
+            <span
+              className="inline-block max-w-full truncate align-middle text-xs bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full"
+              title={partner.feeStructure}
+            >
               {partner.feeStructure}
             </span>
           )}
-          {partner.email && (
+        </div>
+
+        {/* Actions — fixed-width slots so icons and Details align even when absent */}
+        <div className="flex items-center gap-2 shrink-0">
+          {partner.email ? (
             <a
               href={`mailto:${partner.email}`}
-              className="text-xs text-indigo-600 hover:text-indigo-800 hidden sm:inline"
+              className="w-4 text-center text-xs text-indigo-600 hover:text-indigo-800 hidden sm:inline-block"
               title={partner.email}
             >
               ✉
             </a>
+          ) : (
+            <span className="w-4 hidden sm:inline-block" aria-hidden="true" />
           )}
-          {partner.website && (
+          {partner.website ? (
             <a
               href={ensureUrl(partner.website)}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-indigo-600 hover:text-indigo-800"
+              className="w-4 text-center text-xs text-indigo-600 hover:text-indigo-800"
               title="Website"
             >
               🌐
             </a>
+          ) : (
+            <span className="w-4 hidden sm:inline-block" aria-hidden="true" />
           )}
           <Link
             href={detailHref}
