@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Partner } from '@/lib/sheets';
 import { ensureUrl } from '@/lib/utils';
+import CopyEmail from './CopyEmail';
 
 const TAG_COLORS = [
   'bg-blue-100 text-blue-800',
@@ -70,13 +71,7 @@ export default function PartnerListRow({ partner }: { partner: Partner }) {
         {/* Actions — fixed-width slots so icons and Details align even when absent */}
         <div className="flex items-center gap-2 shrink-0">
           {partner.email ? (
-            <a
-              href={`mailto:${partner.email}`}
-              className="w-4 text-center text-xs text-indigo-600 hover:text-indigo-800 hidden sm:inline-block"
-              title={partner.email}
-            >
-              ✉
-            </a>
+            <CopyEmail email={partner.email} variant="icon" />
           ) : (
             <span className="w-4 hidden sm:inline-block" aria-hidden="true" />
           )}

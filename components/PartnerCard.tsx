@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Partner } from '@/lib/sheets';
 import { ensureUrl } from '@/lib/utils';
+import CopyEmail from './CopyEmail';
 
 const TAG_COLORS = [
   'bg-blue-100 text-blue-800',
@@ -78,12 +79,7 @@ export default function PartnerCard({ partner }: { partner: Partner }) {
       <div className="flex items-center justify-between mt-auto pt-2 border-t border-gray-100">
         <div className="flex items-center gap-3 text-xs min-w-0">
           {partner.email && (
-            <a
-              href={`mailto:${partner.email}`}
-              className="text-indigo-600 hover:text-indigo-800 truncate"
-            >
-              ✉ {partner.email}
-            </a>
+            <CopyEmail email={partner.email} variant="inline" />
           )}
           {partner.website && (
             <a
