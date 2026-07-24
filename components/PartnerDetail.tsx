@@ -224,16 +224,15 @@ export default function PartnerDetail({ partner: p }: { partner: Partner }) {
         )}
 
         {/* ── Contact ── */}
-        <Section title="Contact" values={[p.contactPerson, p.contactPerson2, p.email, p.address, p.website]}>
-          <Field label="Key contact person" value={p.contactPerson} />
-          <Field label="Key contact person 2" value={p.contactPerson2} />
+        <Section title="Contact" values={[p.email, p.address, p.website]}>
           {p.email && (
             <div>
-              <dt className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">Email</dt>
+              <dt className="text-xs font-medium text-gray-400 uppercase tracking-wide mb-1">SVP contact</dt>
               <dd className="flex items-center gap-2">
                 <span className="text-sm text-gray-800">{p.email}</span>
                 <CopyEmail email={p.email} variant="icon" />
               </dd>
+              <p className="text-xs text-gray-400 mt-1">Reach out to this SVP partner to connect with the organisation.</p>
             </div>
           )}
           {p.website && (

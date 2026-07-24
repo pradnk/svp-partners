@@ -8,8 +8,6 @@ export interface Partner {
   legalStatus: string;
   address: string;
   website: string;
-  contactPerson: string;
-  contactPerson2: string;
   mission: string;
   focuses: string[];
   serviceDescription: string;
@@ -36,6 +34,7 @@ export interface Partner {
   memberships: string;
   donorSupport: string;
   additionalInfo: string;
+  /** SVP partner contact to reach out to about this external partner (sheet "Email address" column). Never the external partner's own email. */
   email: string;
   collaborationOpportunities: string;
   additionalFocusAreas: string[];
@@ -88,38 +87,38 @@ export async function fetchPartners(): Promise<Partner[]> {
       legalStatus: cell(row, 3),
       address: cell(row, 4),
       website: cell(row, 5),
-      contactPerson: cell(row, 6),
-      contactPerson2: cell(row, 7),
-      mission: cell(row, 8),
-      focuses: [cell(row, 9), cell(row, 10), cell(row, 11), cell(row, 12)].filter(Boolean),
-      serviceDescription: cell(row, 13),
-      serviceAreas: cell(row, 14),
-      focusArea: cell(row, 15),
-      clientBase: cell(row, 16),
-      targetSectors: cell(row, 17),
-      targetOrgSize: cell(row, 18),
-      trainingFormats: cell(row, 19),
-      programDuration: cell(row, 20),
-      feeStructure: cell(row, 21),
-      costPerOrg: cell(row, 22),
-      qualityMetrics: cell(row, 23),
-      customization: cell(row, 24),
-      followUpSupport: cell(row, 25),
-      staffStrength: cell(row, 26),
-      subjectMatterExperts: cell(row, 27),
-      keyQualifications: cell(row, 28),
-      certifications: cell(row, 29),
-      yearsInSector: cell(row, 30),
-      orgsTrainedCount: cell(row, 31),
-      majorAchievements: cell(row, 32),
-      partneringOrgs: cell(row, 34),
-      memberships: cell(row, 35),
-      donorSupport: cell(row, 36),
-      additionalInfo: cell(row, 37),
-      email: cell(row, 38),
-      collaborationOpportunities: cell(row, 39),
-      additionalFocusAreas: Array.from({ length: 10 }, (_, i) => cell(row, 40 + i)).filter(Boolean),
-      testimonials: [cell(row, 50), cell(row, 51), cell(row, 52)].filter(Boolean),
+      // Cols 6-9 are the external partner's own contact persons + emails — intentionally not read.
+      mission: cell(row, 10),
+      focuses: [cell(row, 11), cell(row, 12), cell(row, 13), cell(row, 14)].filter(Boolean),
+      serviceDescription: cell(row, 15),
+      serviceAreas: cell(row, 16),
+      focusArea: cell(row, 17),
+      clientBase: cell(row, 18),
+      targetSectors: cell(row, 19),
+      targetOrgSize: cell(row, 20),
+      trainingFormats: cell(row, 21),
+      programDuration: cell(row, 22),
+      feeStructure: cell(row, 23),
+      costPerOrg: cell(row, 24),
+      qualityMetrics: cell(row, 25),
+      customization: cell(row, 26),
+      followUpSupport: cell(row, 27),
+      staffStrength: cell(row, 28),
+      subjectMatterExperts: cell(row, 29),
+      keyQualifications: cell(row, 30),
+      certifications: cell(row, 31),
+      yearsInSector: cell(row, 32),
+      orgsTrainedCount: cell(row, 33),
+      majorAchievements: cell(row, 34),
+      partneringOrgs: cell(row, 36),
+      memberships: cell(row, 37),
+      donorSupport: cell(row, 38),
+      additionalInfo: cell(row, 39),
+      // "Email address" column = the SVP partner to contact about this org, not the org's own email.
+      email: cell(row, 40),
+      collaborationOpportunities: cell(row, 41),
+      additionalFocusAreas: Array.from({ length: 10 }, (_, i) => cell(row, 42 + i)).filter(Boolean),
+      testimonials: [cell(row, 55), cell(row, 56), cell(row, 57)].filter(Boolean),
     }));
 }
 
